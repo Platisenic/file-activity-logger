@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <gnu/lib-names.h>
@@ -31,6 +34,26 @@ int rename(const char *old, const char *new) {
     return ret;
 }
 
+static int (*ori_remove)(const char *) = NULL;
+int remove(const char *pathname) {
+    if(ori_remove == NULL) {
+        void *handle = dlopen(LIBC_SO, RTLD_LAZY);
+        if(handle == NULL) return -1;
+        if((ori_remove = dlsym(handle, "remove")) == NULL) {
+            return -1;
+        }
+    }
+
+    char real_pathname[1024];
+    if(realpath(pathname, real_pathname) == NULL) {
+        strcpy(real_pathname, pathname);
+    }
+
+    int ret = ori_remove(pathname);
+    fprintf(stderr, "[logger] remove(\"%s\") = %d\n", real_pathname, ret);
+    return ret;
+}
+
 static int (*ori_chmod)(const char *, mode_t) = NULL;
 int chmod(const char *pathname, mode_t mode) {
     if(ori_chmod == NULL) {
@@ -47,7 +70,7 @@ int chmod(const char *pathname, mode_t mode) {
     }
 
     int ret = ori_chmod(pathname, mode);
-    fprintf(stderr, "[logger] chmod(\"%s\", %o) = %d\n", real_pathname, mode, ret);
+    fprintf(stderr, "[logger] chmod(\"%s\", %03o) = %d\n", real_pathname, mode, ret);
     return ret;
 }
 
@@ -200,5 +223,139 @@ FILE *tmpfile() {
 
     FILE* ret = ori_tmpfile();
     fprintf(stderr, "[logger] tmpfile() = %p\n", ret);
+    return ret;
+}
+
+static int (*ori_creat)(const char *, mode_t) = NULL;
+int creat(const char *pathname, mode_t mode) {
+    if(ori_creat == NULL) {
+        void *handle = dlopen(LIBC_SO, RTLD_LAZY);
+        if(handle == NULL) return -1;
+        if((ori_creat = dlsym(handle, "creat")) == NULL) {
+            return -1;
+        }
+    }
+
+    char real_pathname[1024];
+    if(realpath(pathname, real_pathname) == NULL) {
+        strcpy(real_pathname, pathname);
+    }
+
+    int ret = ori_creat(pathname, mode);
+    fprintf(stderr, "[logger] creat(\"%s\", %03o) = %d\n", real_pathname, mode, ret);
+    return ret;
+}
+
+static int (*ori_open)(const char *, int, ...) = NULL;
+int open(const char *pathname, int flags, ...) {
+    if(ori_open == NULL) {
+        void *handle = dlopen(LIBC_SO, RTLD_LAZY);
+        if(handle == NULL) return -1;
+        if((ori_open = dlsym(handle, "open")) == NULL) {
+            return -1;
+        }
+    }
+    va_list ap;
+    va_start(ap, flags);
+    mode_t mode = va_arg(ap, mode_t);
+    va_end(ap);
+
+
+    char real_pathname[1024];
+    if(realpath(pathname, real_pathname) == NULL) {
+        strcpy(real_pathname, pathname);
+    }
+
+    int ret = ori_open(pathname, flags, mode);
+    fprintf(stderr, "[logger] open(\"%s\", %d, %03o) = %d\n", real_pathname, flags, mode, ret);
+    return ret;
+}
+
+static ssize_t (*ori_read)(int, void *, size_t)= NULL;
+ssize_t read(int fd, void *buf, size_t count) {
+    if(ori_read == NULL) {
+        void *handle = dlopen(LIBC_SO, RTLD_LAZY);
+        if(handle == NULL) return -1;
+        if((ori_read = dlsym(handle, "read")) == NULL) {
+            return -1;
+        }
+    }
+
+    pid_t pid = getpid();
+    char fdpath[1024];
+    sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
+    char real_fdpath[1024];
+    if(readlink(fdpath, real_fdpath, 1024) == -1) {
+        strcpy(real_fdpath, fdpath);
+    }
+
+    char bufcpy[33];
+    memset(bufcpy, 0, 33);
+    memcpy(bufcpy, buf, 32);
+    for (char *p = bufcpy; *p; p++) {
+        if (isprint(*p) == 0) {
+            *p = '.';
+        }
+    }
+
+    size_t ret = ori_read(fd, buf, count);
+    fprintf(stderr, "[logger] read(\"%s\", \"%s\", %ld) = %ld\n", real_fdpath, bufcpy, count, ret);
+
+    return ret;
+}
+
+static ssize_t (*ori_write)(int, const void *, size_t)= NULL;
+ssize_t write(int fd, const void *buf, size_t count) {
+    if(ori_write == NULL) {
+        void *handle = dlopen(LIBC_SO, RTLD_LAZY);
+        if(handle == NULL) return -1;
+        if((ori_write = dlsym(handle, "write")) == NULL) {
+            return -1;
+        }
+    }
+
+    pid_t pid = getpid();
+    char fdpath[1024];
+    sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
+    char real_fdpath[1024];
+    if(readlink(fdpath, real_fdpath, 1024) == -1) {
+        strcpy(real_fdpath, fdpath);
+    }
+
+    char bufcpy[33];
+    memset(bufcpy, 0, 33);
+    memcpy(bufcpy, buf, 32);
+    for (char *p = bufcpy; *p; p++) {
+        if (isprint(*p) == 0) {
+            *p = '.';
+        }
+    }
+
+    size_t ret = ori_write(fd, buf, count);
+    fprintf(stderr, "[logger] write(\"%s\", \"%s\", %ld) = %ld\n", real_fdpath, bufcpy, count, ret);
+
+    return ret;
+}
+
+static int (*ori_close)(int) = NULL;
+int close(int fd) {
+    if(ori_close == NULL) {
+        void *handle = dlopen(LIBC_SO, RTLD_LAZY);
+        if(handle == NULL) return -1;
+        if((ori_close = dlsym(handle, "close")) == NULL) {
+            return -1;
+        }
+    }
+
+    pid_t pid = getpid();
+    char fdpath[1024];
+    sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
+    char real_fdpath[1024];
+    if(readlink(fdpath, real_fdpath, 1024) == -1) {
+        strcpy(real_fdpath, fdpath);
+    }
+
+    int ret = ori_close(fd);
+    fprintf(stderr, "[logger] close(\"%s\") = %d\n", real_fdpath, ret);
     return ret;
 }
