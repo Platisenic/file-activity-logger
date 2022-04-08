@@ -11,7 +11,7 @@
 #include <gnu/lib-names.h>
 
 static int (*ori_rename)(const char *, const char *) = NULL;
-int rename(const char *old, const char *new) {
+int rename(const char *oldpath, const char *newpath) {
     if(ori_rename == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
@@ -20,17 +20,17 @@ int rename(const char *old, const char *new) {
         }
     }
 
-    char real_old[1024];
-    char real_new[1024];
-    if(realpath(old, real_old) == NULL) {
-        strcpy(real_old, old);
+    char real_oldpath[1024];
+    char real_newpath[1024];
+    if(realpath(oldpath, real_oldpath) == NULL) {
+        strcpy(real_oldpath, oldpath);
     }
-    if(realpath(new, real_new) == NULL) {
-        strcpy(real_new, new);
+    if(realpath(newpath, real_newpath) == NULL) {
+        strcpy(real_newpath, newpath);
     }
 
-    int ret = ori_rename(old, new);
-    fprintf(stderr, "[logger] rename(\"%s\", \"%s\") = %d\n", real_old, real_new, ret);
+    int ret = ori_rename(oldpath, newpath);
+    fprintf(stderr, "[logger] rename(\"%s\", \"%s\") = %d\n", real_oldpath, real_newpath, ret);
     return ret;
 }
 
@@ -130,6 +130,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     char fdpath[1024];
     sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
     char real_fdpath[1024];
+    memset(real_fdpath, 0, 1024);
     if(readlink(fdpath, real_fdpath, 1024) == -1) {
         strcpy(real_fdpath, fdpath);
     }
@@ -166,6 +167,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     char fdpath[1024];
     sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
     char real_fdpath[1024];
+    memset(real_fdpath, 0, 1024);
     if(readlink(fdpath, real_fdpath, 1024) == -1) {
         strcpy(real_fdpath, fdpath);
     }
@@ -202,6 +204,7 @@ int fclose(FILE *stream) {
     char fdpath[1024];
     sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
     char real_fdpath[1024];
+    memset(real_fdpath, 0, 1024);
     if(readlink(fdpath, real_fdpath, 1024) == -1) {
         strcpy(real_fdpath, fdpath);
     }
@@ -285,6 +288,7 @@ ssize_t read(int fd, void *buf, size_t count) {
     char fdpath[1024];
     sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
     char real_fdpath[1024];
+    memset(real_fdpath, 0, 1024);
     if(readlink(fdpath, real_fdpath, 1024) == -1) {
         strcpy(real_fdpath, fdpath);
     }
@@ -318,6 +322,7 @@ ssize_t write(int fd, const void *buf, size_t count) {
     char fdpath[1024];
     sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
     char real_fdpath[1024];
+    memset(real_fdpath, 0, 1024);
     if(readlink(fdpath, real_fdpath, 1024) == -1) {
         strcpy(real_fdpath, fdpath);
     }
@@ -351,6 +356,7 @@ int close(int fd) {
     char fdpath[1024];
     sprintf(fdpath, "/proc/%d/fd/%d", pid, fd);
     char real_fdpath[1024];
+    memset(real_fdpath, 0, 1024);
     if(readlink(fdpath, real_fdpath, 1024) == -1) {
         strcpy(real_fdpath, fdpath);
     }

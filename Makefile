@@ -1,21 +1,19 @@
 CC     = gcc
-CFLAGS = -Wall -Werror
+CXX    = g++
+CFLAGS = -Wall -Werror -g
 LDL    = -ldl
 
-PROGS = logger.so testlogger
+PROGS = logger.so logger
 
-.PHONY: all test clean
+.PHONY: all clean
 
 all: $(PROGS)
 
 %.so: %.c
 	$(CC) -o $@ $(CFLAGS) -shared -fPIC $< $(LDL)
 
-%: %.c
-	$(CC) -o $@ $<
-
-test: all
-	LD_PRELOAD=./logger.so ./testlogger
+%: %.cpp
+	$(CXX) -o $@ $(CFLAGS) $< $(LDL)
 
 clean:
-	rm $(PROGS)
+	rm -f $(PROGS)
