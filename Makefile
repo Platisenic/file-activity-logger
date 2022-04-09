@@ -3,17 +3,18 @@ CXX    = g++
 CFLAGS = -Wall -Werror -g
 LDL    = -ldl
 
-PROGS = logger.so logger
+INJECTSO = logger
+LOGGERRUNTIME = logger
 
 .PHONY: all clean
 
-all: $(PROGS)
+all: $(INJECTSO).so $(LOGGERRUNTIME)
 
-%.so: %.c
+$(INJECTSO).so: hw2.c
 	$(CC) -o $@ $(CFLAGS) -shared -fPIC $< $(LDL)
 
-%: %.cpp
-	$(CXX) -o $@ $(CFLAGS) $< $(LDL)
+$(LOGGERRUNTIME): $(LOGGERRUNTIME).c
+	$(CC) -o $@ $(CFLAGS) $<
 
 clean:
-	rm -f $(PROGS)
+	rm -f $(INJECTSO).so $(LOGGERRUNTIME) *.txt
