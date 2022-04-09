@@ -26,7 +26,7 @@ int rename(const char *oldpath, const char *newpath) {
     if(ori_rename == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_rename = dlsym(handle, "rename")) == NULL) {
+        if((ori_rename = (int(*)(const char *, const char *))dlsym(handle, "rename")) == NULL) {
             return -1;
         }
     }
@@ -50,7 +50,7 @@ int remove(const char *pathname) {
     if(ori_remove == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_remove = dlsym(handle, "remove")) == NULL) {
+        if((ori_remove = (int(*)(const char *))dlsym(handle, "remove")) == NULL) {
             return -1;
         }
     }
@@ -70,7 +70,7 @@ int chmod(const char *pathname, mode_t mode) {
     if(ori_chmod == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_chmod = dlsym(handle, "chmod")) == NULL) {
+        if((ori_chmod = (int(*)(const char *, mode_t))dlsym(handle, "chmod")) == NULL) {
             return -1;
         }
     }
@@ -90,7 +90,7 @@ int chown(const char *pathname, uid_t owner, gid_t group) {
     if(ori_chown == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_chown = dlsym(handle, "chown")) == NULL) {
+        if((ori_chown = (int(*)(const char *, uid_t, gid_t))dlsym(handle, "chown")) == NULL) {
             return -1;
         }
     }
@@ -110,7 +110,7 @@ FILE *fopen(const char *pathname, const char *mode) {
     if(ori_fopen == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return NULL;
-        if((ori_fopen = dlsym(handle, "fopen")) == NULL) {
+        if((ori_fopen = (FILE*(*)(const char *, const char *))dlsym(handle, "fopen")) == NULL) {
             return NULL;
         }
     }
@@ -130,7 +130,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     if(ori_fread == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return 0;
-        if((ori_fread = dlsym(handle, "fread")) == NULL) {
+        if((ori_fread = (size_t(*)(void *, size_t, size_t, FILE *))dlsym(handle, "fread")) == NULL) {
             return 0;
         }
     }
@@ -167,7 +167,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     if(ori_fwrite == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return 0;
-        if((ori_fwrite = dlsym(handle, "fwrite")) == NULL) {
+        if((ori_fwrite = (size_t(*)(const void *, size_t, size_t, FILE *))dlsym(handle, "fwrite")) == NULL) {
             return 0;
         }
     }
@@ -204,7 +204,7 @@ int fclose(FILE *stream) {
     if(ori_fclose == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_fclose = dlsym(handle, "fclose")) == NULL) {
+        if((ori_fclose = (int(*)(FILE *))dlsym(handle, "fclose")) == NULL) {
             return -1;
         }
     }
@@ -230,7 +230,7 @@ FILE *tmpfile() {
     if(ori_tmpfile == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return NULL;
-        if((ori_tmpfile = dlsym(handle, "tmpfile")) == NULL) {
+        if((ori_tmpfile = (FILE*(*)())dlsym(handle, "tmpfile")) == NULL) {
             return NULL;
         }
     }
@@ -245,7 +245,7 @@ int creat(const char *pathname, mode_t mode) {
     if(ori_creat == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_creat = dlsym(handle, "creat")) == NULL) {
+        if((ori_creat = (int(*)(const char *, mode_t))dlsym(handle, "creat")) == NULL) {
             return -1;
         }
     }
@@ -265,7 +265,7 @@ int open(const char *pathname, int flags, ...) {
     if(ori_open == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_open = dlsym(handle, "open")) == NULL) {
+        if((ori_open = (int(*)(const char *, int, ...))dlsym(handle, "open")) == NULL) {
             return -1;
         }
     }
@@ -290,7 +290,7 @@ ssize_t read(int fd, void *buf, size_t count) {
     if(ori_read == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_read = dlsym(handle, "read")) == NULL) {
+        if((ori_read = (ssize_t(*)(int, void *, size_t))dlsym(handle, "read")) == NULL) {
             return -1;
         }
     }
@@ -324,7 +324,7 @@ ssize_t write(int fd, const void *buf, size_t count) {
     if(ori_write == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_write = dlsym(handle, "write")) == NULL) {
+        if((ori_write = (ssize_t(*)(int, const void *, size_t))dlsym(handle, "write")) == NULL) {
             return -1;
         }
     }
@@ -358,7 +358,7 @@ int close(int fd) {
     if(ori_close == NULL) {
         void *handle = dlopen(LIBC_SO, RTLD_LAZY);
         if(handle == NULL) return -1;
-        if((ori_close = dlsym(handle, "close")) == NULL) {
+        if((ori_close = (int(*)(int))dlsym(handle, "close")) == NULL) {
             return -1;
         }
     }

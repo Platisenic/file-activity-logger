@@ -1,5 +1,4 @@
 CC     = gcc
-CXX    = g++
 CFLAGS = -Wall -Werror -g
 LDL    = -ldl
 
