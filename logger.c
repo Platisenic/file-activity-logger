@@ -28,7 +28,6 @@ void printMsg() {
                     "\t--: separate the arguments for logger and for the command\n");
 }
 
-
 int main(int argc, char * argv[]) {
     if (argc < 2) {
         printMsg();
@@ -41,8 +40,8 @@ int main(int argc, char * argv[]) {
     int opt;
     int sepPos = checkSepExist(argc, argv);
 
-    if(sepPos == 0) {
-        if(!checkFirstArgIsCMD(argc, argv)) {
+    if (sepPos == 0) {
+        if (!checkFirstArgIsCMD(argc, argv)) {
             printMsg();
             exit(EXIT_FAILURE);
         }
@@ -63,12 +62,15 @@ int main(int argc, char * argv[]) {
         }  
     }
 
-    if(outputFilePath != NULL) {
+    if (outputFilePath != NULL) {
         logfd = open(outputFilePath, O_CREAT|O_WRONLY|O_TRUNC, 0664);
-        if (logfd == -1) {
-            printMsg();
-            exit(EXIT_FAILURE);
-        }
+    } else {
+        logfd = dup(STDERR_FILENO);
+    }
+
+    if (logfd == -1) {
+        printMsg();
+        exit(EXIT_FAILURE);
     }
 
     char logfd_str[5] = "";

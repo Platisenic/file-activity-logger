@@ -146,10 +146,11 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
         strcpy(real_fdpath, fdpath);
     }
 
-    char ptrcpy[33];
-    memset(ptrcpy, 0, 33);
-    memcpy(ptrcpy, ptr, 32);
-    for (char *p = ptrcpy; *p; p++) {
+    char bufcpy[33];
+    memset(bufcpy, 0, 33);
+    int cpylen = (sizeof(ptr) < 32) ? sizeof(ptr) : 32;
+    memcpy(bufcpy, ptr, cpylen);
+    for (char *p = bufcpy; *p; p++) {
         if (isprint(*p) == 0) {
             *p = '.';
         }
@@ -157,7 +158,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 
     size_t ret = ori_fread(ptr, size, nmemb, stream);
     dprintf(getlogfd(), "[logger] fread(\"%s\", %ld, %ld, \"%s\") = %ld\n",
-        ptrcpy, size, nmemb, real_fdpath, ret);
+        bufcpy, size, nmemb, real_fdpath, ret);
 
     return ret;
 }
@@ -183,10 +184,11 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
         strcpy(real_fdpath, fdpath);
     }
 
-    char ptrcpy[33];
-    memset(ptrcpy, 0, 33);
-    memcpy(ptrcpy, ptr, 32);
-    for (char *p = ptrcpy; *p; p++) {
+    char bufcpy[33];
+    memset(bufcpy, 0, 33);
+    int cpylen = (sizeof(ptr) < 32) ? sizeof(ptr) : 32;
+    memcpy(bufcpy, ptr, cpylen);
+    for (char *p = bufcpy; *p; p++) {
         if (isprint(*p) == 0) {
             *p = '.';
         }
@@ -194,7 +196,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
 
     size_t ret = ori_fwrite(ptr, size, nmemb, stream);
     dprintf(getlogfd(), "[logger] fwrite(\"%s\", %ld, %ld, \"%s\") = %ld\n",
-        ptrcpy, size, nmemb, real_fdpath, ret);
+        bufcpy, size, nmemb, real_fdpath, ret);
 
     return ret;
 }
@@ -281,7 +283,7 @@ int open(const char *pathname, int flags, ...) {
     }
 
     int ret = ori_open(pathname, flags, mode);
-    dprintf(getlogfd(), "[logger] open(\"%s\", %d, %03o) = %d\n", real_pathname, flags, mode, ret);
+    dprintf(getlogfd(), "[logger] open(\"%s\", %03o, %03o) = %d\n", real_pathname, flags, mode, ret);
     return ret;
 }
 
@@ -306,7 +308,8 @@ ssize_t read(int fd, void *buf, size_t count) {
 
     char bufcpy[33];
     memset(bufcpy, 0, 33);
-    memcpy(bufcpy, buf, 32);
+    int cpylen = (sizeof(buf) < 32) ? sizeof(buf) : 32;
+    memcpy(bufcpy, buf, cpylen);
     for (char *p = bufcpy; *p; p++) {
         if (isprint(*p) == 0) {
             *p = '.';
@@ -340,7 +343,8 @@ ssize_t write(int fd, const void *buf, size_t count) {
 
     char bufcpy[33];
     memset(bufcpy, 0, 33);
-    memcpy(bufcpy, buf, 32);
+    int cpylen = (sizeof(buf) < 32) ? sizeof(buf) : 32;
+    memcpy(bufcpy, buf, cpylen);
     for (char *p = bufcpy; *p; p++) {
         if (isprint(*p) == 0) {
             *p = '.';
