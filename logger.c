@@ -37,16 +37,27 @@ int main(int argc, char * argv[]) {
     char *loggersoPath = DFT_SO_PATH;
     char *outputFilePath = NULL;
     int logfd = STDERR_FILENO;
-    int opt;
     int sepPos = checkSepExist(argc, argv);
-
+    int opt;
+    opterr = 0;
     if (sepPos == 0) {
         if (!checkFirstArgIsCMD(argc, argv)) {
-            printMsg();
-            exit(EXIT_FAILURE);
+            sepPos = argc - 2;
+            while ((opt = getopt(argc-1, argv, "p:o:")) != -1 ) {
+                switch (opt) {
+                    case 'p':
+                        loggersoPath = optarg;
+                        break;
+                    case 'o':
+                        outputFilePath = optarg;
+                        break;
+                    default:
+                        printMsg();
+                        exit(EXIT_FAILURE);
+                }
+            }
         }
     } else {
-        opterr = 0;
         while ((opt = getopt(sepPos, argv, "p:o:")) != -1 ) {
             switch (opt) {
                 case 'p':
@@ -59,7 +70,7 @@ int main(int argc, char * argv[]) {
                     printMsg();
                     exit(EXIT_FAILURE);
             }
-        }  
+        }
     }
 
     if (outputFilePath != NULL) {
@@ -73,13 +84,15 @@ int main(int argc, char * argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    char logfd_str[5] = "";
+    char logfd_str[5];
+    memset(logfd_str, 0, 5);
     sprintf(logfd_str, "%d", logfd);
 
     setenv("LD_PRELOAD", loggersoPath, 1);
     setenv("LOGGER_FD", logfd_str, 1);
-    execvp(argv[sepPos+1], argv+sepPos+1);
+    execvp(argv[sepPos+1], argv+(sepPos+1));
     close(logfd);
 
     return 0;
 }
+
