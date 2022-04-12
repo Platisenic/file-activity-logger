@@ -135,6 +135,8 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
         }
     }
 
+    size_t ret = ori_fread(ptr, size, nmemb, stream);
+
     int fd;
     if((fd = fileno(stream)) == -1) return 0;
     pid_t pid = getpid();
@@ -156,7 +158,6 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
         }
     }
 
-    size_t ret = ori_fread(ptr, size, nmemb, stream);
     dprintf(getlogfd(), "[logger] fread(\"%s\", %ld, %ld, \"%s\") = %ld\n",
         bufcpy, size, nmemb, real_fdpath, ret);
 
@@ -296,6 +297,7 @@ ssize_t read(int fd, void *buf, size_t count) {
             return -1;
         }
     }
+    size_t ret = ori_read(fd, buf, count);
 
     pid_t pid = getpid();
     char fdpath[1024];
@@ -316,7 +318,6 @@ ssize_t read(int fd, void *buf, size_t count) {
         }
     }
 
-    size_t ret = ori_read(fd, buf, count);
     dprintf(getlogfd(), "[logger] read(\"%s\", \"%s\", %ld) = %ld\n", real_fdpath, bufcpy, count, ret);
 
     return ret;
