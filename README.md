@@ -1,4 +1,4 @@
-# logger-library-injection
+# File Activity Logger
 ## Monitor File Activities of Dynamically Linked Programs
 For practicing library injection and API hijacking, I implement a simple logger program that can show file-access-related activities of an arbitrary binary running on a Linux operating system.  
 The program is divided in two parts. One is a logger program that prepares the runtime environment to inject, load, and execute a monitored binary program.  
